@@ -39,6 +39,8 @@ describe("Button", () => {
   it("forwards a custom className", () => {
     render(<Button className="custom-class">Save</Button>);
 
-    expect(screen.getByRole("button", { name: "Save" })).toHaveClass("custom-class");
+    expect(screen.getByRole("button", { name: "Save" })).toHaveClass(
+      "custom-class",
+    );
   });
 });

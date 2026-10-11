@@ -24,7 +24,8 @@ export class NetworkError extends Error {
 }
 
 export const isApiError = (e: unknown): e is ApiError => e instanceof ApiError;
-export const isNetworkError = (e: unknown): e is NetworkError => e instanceof NetworkError;
+export const isNetworkError = (e: unknown): e is NetworkError =>
+  e instanceof NetworkError;
 
 type QueryValue = string | number | boolean | null | undefined;
 
@@ -35,10 +36,14 @@ export interface RequestOptions extends Omit<RequestInit, "body" | "method"> {
 }
 
 function buildUrl(path: string, query?: RequestOptions["query"]): string {
-  const url = new URL(path.replace(/^\//, ""), env.NEXT_PUBLIC_API_URL.replace(/\/?$/, "/"));
+  const url = new URL(
+    path.replace(/^\//, ""),
+    env.NEXT_PUBLIC_API_URL.replace(/\/?$/, "/"),
+  );
   if (query) {
     for (const [key, value] of Object.entries(query)) {
-      if (value !== undefined && value !== null) url.searchParams.set(key, String(value));
+      if (value !== undefined && value !== null)
+        url.searchParams.set(key, String(value));
     }
   }
   return url.toString();
@@ -56,10 +61,13 @@ function isJsonBody(body: unknown): boolean {
 }
 
 async function parseBody(res: Response): Promise<unknown> {
-  if (res.status === 204 || res.headers.get("content-length") === "0") return null;
+  if (res.status === 204 || res.headers.get("content-length") === "0")
+    return null;
   const type = res.headers.get("content-type") ?? "";
   try {
-    return type.includes("application/json") ? await res.json() : await res.text();
+    return type.includes("application/json")
+      ? await res.json()
+      : await res.text();
   } catch {
     return null;
   }
@@ -100,7 +108,10 @@ async function request<T>(
 
   if (!res.ok) {
     const message =
-      data && typeof data === "object" && "message" in data && typeof data.message === "string"
+      data &&
+      typeof data === "object" &&
+      "message" in data &&
+      typeof data.message === "string"
         ? data.message
         : undefined;
     throw new ApiError(res.status, res.statusText, data, message);
@@ -110,12 +121,14 @@ async function request<T>(
 }
 
 export const apiClient = {
-  get: <T>(path: string, options?: RequestOptions) => request<T>("GET", path, options),
+  get: <T>(path: string, options?: RequestOptions) =>
+    request<T>("GET", path, options),
   post: <T>(path: string, body?: unknown, options?: RequestOptions) =>
     request<T>("POST", path, { ...options, body }),
   put: <T>(path: string, body?: unknown, options?: RequestOptions) =>
     request<T>("PUT", path, { ...options, body }),
   patch: <T>(path: string, body?: unknown, options?: RequestOptions) =>
     request<T>("PATCH", path, { ...options, body }),
-  delete: <T>(path: string, options?: RequestOptions) => request<T>("DELETE", path, options),
+  delete: <T>(path: string, options?: RequestOptions) =>
+    request<T>("DELETE", path, options),
 };

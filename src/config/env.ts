@@ -1,7 +1,9 @@
 import { z } from "zod";
 
 const envSchema = z.object({
-  NEXT_PUBLIC_API_URL: z.url({ message: "must be a valid URL, e.g. http://localhost:4000" }),
+  NEXT_PUBLIC_API_URL: z.url({
+    message: "must be a valid URL, e.g. http://localhost:4000",
+  }),
 });
 
 const parsed = envSchema.safeParse({

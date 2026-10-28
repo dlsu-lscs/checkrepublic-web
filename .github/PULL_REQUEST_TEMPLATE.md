@@ -4,7 +4,7 @@ Describe your changes
 
 ## Linked Issues
 
-closes #ISSUE_NUMBER	
+closes #ISSUE_NUMBER
 
 ## Pre-PR Checklist
 

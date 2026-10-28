@@ -1,0 +1,15 @@
+node_modules
+.next
+coverage
+.git
+.github
+.env
+.env.*
+*.md
+**/*.test.ts
+**/*.test.tsx
+**/tests
+vitest.config.ts
+vitest.setup.ts
+Dockerfile
+.dockerignore

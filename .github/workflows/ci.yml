@@ -1,0 +1,63 @@
+# CI for checkrepublic-web (#18): the gitleaks secret scan, then install, lint, build and test.
+# Runs on pushes and pull requests to main and development, and by hand (Actions → CI → Run workflow).
+name: CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, development]
+  pull_request:
+    branches: [main, development]
+
+permissions:
+  contents: read
+  pull-requests: read # gitleaks-action lists a pull request's commits to scan them
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # every branch and commit, so the secret scan sees the full history
+
+      # Official gitleaks-action, licensed through the dlsu-lscs org secret GITLEAKS_LICENSE. Pinned to the
+      # v3.0.0 commit, not the tag: a tag can be moved to other code, a commit SHA cannot.
+      # It redacts findings in the log, which is public on this repo. With the pull_request trigger
+      # on, add `pull-requests: write` above if you want its inline comments on leaking lines.
+      - name: Secret scan (gitleaks)
+        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+          GITLEAKS_VERSION: 8.30.1 # the action's default is the older 8.24.3
+
+      # gitleaks-action leaves its report, results.sarif, in the workspace (it's also uploaded as an
+      # artifact). Delete it so the Lint step's `prettier --check .` doesn't check it.
+      - name: Remove the scan report
+        run: rm -f results.sarif
+
+      # Reads the pnpm version from package.json "packageManager"; must run before Setup Node for the cache.
+      - name: Setup pnpm
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Build
+        run: pnpm build
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:4000/api # next.config.ts needs a valid URL to build; the .env.example value
+
+      - name: Test
+        run: pnpm test
